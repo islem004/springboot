@@ -1,0 +1,66 @@
+<div class="container mt-4">
+
+    <!-- Search Filters -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <form th:action="@{/user/search}" method="get" class="d-flex">
+                <input class="form-control me-2" type="search" placeholder="Search by name" name="q" th:value="${keyword}">
+                <button class="btn btn-outline-light" type="submit">Search</button>
+            </form>
+        </div>
+        <div class="col-md-6">
+            <form th:action="@{/user/search}" method="get">
+                <select class="form-select" name="categoryId" onchange="this.form.submit()">
+                    <option value="">All Categories</option>
+                    <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"
+                            th:selected="${cat.id == selectedCategoryId}"></option>
+                </select>
+            </form>
+        </div>
+    </div>
+
+    <!-- Top-Rated Movies -->
+    <h4>Top Rated</h4>
+    <div class="row flex-nowrap overflow-auto mb-4">
+        <div class="col-6 col-md-4 col-lg-3 mb-3" th:each="m : ${topRated}">
+            <div class="card h-100 shadow-sm">
+                <img th:src="${m.imageUrl != null ? m.imageUrl : '/images/default-movie.jpg'}" class="card-img-top">
+                <div class="card-body">
+                    <h6 class="card-title" th:text="${m.title}"></h6>
+                    <div>⭐ <span th:text="${m.rating}"></span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Latest Movies -->
+    <h4>Latest</h4>
+    <div class="row flex-nowrap overflow-auto mb-4">
+        <div class="col-6 col-md-4 col-lg-3 mb-3" th:each="m : ${latest}">
+            <div class="card h-100 shadow-sm">
+                <img th:src="${m.imageUrl != null ? m.imageUrl : '/images/default-movie.jpg'}" class="card-img-top">
+                <div class="card-body">
+                    <h6 class="card-title" th:text="${m.title}"></h6>
+                    <p th:text="${m.releaseDate}"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Results -->
+    <h4 th:if="${keyword != null && keyword != ''}">Search results for "<span th:text="${keyword}"></span>"</h4>
+    <div class="row mt-3">
+        <div class="col-6 col-md-4 col-lg-3 mb-4" th:each="m : ${movies}">
+            <div class="card h-100 shadow-sm">
+                <img th:src="${m.imageUrl != null ? m.imageUrl : '/images/default-movie.jpg'}" class="card-img-top">
+                <div class="card-body">
+                    <h6 class="card-title" th:text="${m.title}"></h6>
+                    <p class="card-text" th:text="${#strings.abbreviate(m.description, 80)}"></p>
+                    <span class="category-label" th:text="${m.category.name}"></span>
+                    <div class="mt-1">⭐ <span th:text="${m.rating}"></span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
