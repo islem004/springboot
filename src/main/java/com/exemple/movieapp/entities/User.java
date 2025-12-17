@@ -24,5 +24,11 @@ public class User {
     private String role; // ROLE_ADMIN or ROLE_USER
 
     private String email;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private java.util.List<Comment> comments;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    private java.util.List<Favorite> favorites;
+
 
 }

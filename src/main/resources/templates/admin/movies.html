@@ -22,14 +22,7 @@
     </style>
 </head>
 <body>
-
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
-    <a class="navbar-brand" href="#">🎬 MovieApp Admin</a>
-    <div class="ms-auto">
-        <a href="/logout" class="btn btn-outline-light btn-sm">Logout</a>
-    </div>
-</nav>
-
+<div th:replace="admin/_navbar :: navbar"></div>
 <div class="container mt-5">
     <div class="card shadow-sm">
         <div class="card-header d-flex justify-content-between align-items-center">
@@ -42,15 +35,18 @@
                 <tr>
                     <th>Title</th>
                     <th>Rating</th>
+                    <th>Release Date</th>
                     <th>Category</th>
                     <th>Image</th>
                     <th>Actions</th>
+
                 </tr>
                 </thead>
                 <tbody>
                 <tr th:each="movie : ${movies}">
                     <td th:text="${movie.title}"></td>
                     <td th:text="${movie.rating}"></td>
+                    <td th:text="${movie.releaseDate}"></td>
                     <td th:text="${movie.category.name}"></td>
                     <td>
                         <img th:if="${movie.imageUrl}" th:src="${movie.imageUrl}" alt="Movie Image" class="img-thumbnail">

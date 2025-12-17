@@ -39,10 +39,16 @@
                 <input type="number" th:field="*{rating}" step="0.1" class="form-control" required>
             </div>
 
+
             <div class="mb-3">
                 <label class="form-label">Description</label>
                 <textarea th:field="*{description}" rows="3" class="form-control"></textarea>
             </div>
+            <div class="mb-3">
+                <label class="form-label">Release Date</label>
+                <input type="date" th:field="*{releaseDate}" class="form-control" required>
+            </div>
+
 
             <div class="mb-3">
                 <label class="form-label">Category</label>
@@ -56,6 +62,18 @@
                 <label class="form-label">Upload Image</label>
                 <input type="file" name="imageFile" class="form-control" accept="image/*" onchange="previewImage(event)">
             </div>
+            <div class="mb-3">
+                <label class="form-label">Director</label>
+                <input type="text" th:field="*{director}" class="form-control"
+                       placeholder="e.g. Christopher Nolan">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Cast</label>
+                <textarea th:field="*{cast}" rows="3" class="form-control"
+                          placeholder="Actor 1, Actor 2, Actor 3"></textarea>
+            </div>
+
 
             <div class="mb-3">
                 <label class="form-label">Or paste Image URL</label>

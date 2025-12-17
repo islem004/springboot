@@ -1,66 +1,77 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Search Movies 🎬</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <style>
+        body { background-color: #121212; color: #fff; padding-top: 70px; }
+        .card { background-color: #1e1e1e; border: none; transition: transform 0.3s; }
+        .card:hover { transform: scale(1.05); z-index: 10; }
+        .card-title, .card-text, .category-label { color: #fff; }
+        .card-text { font-size: 0.85rem; }
+        .category-label { font-size: 0.85rem; font-weight: bold; background-color: #ff6f61; padding: 2px 6px; border-radius: 4px; display: inline-block; }
+        .rating { color: #ffcc00; font-weight: bold; }
+        .card-img-top { height: 280px; object-fit: cover; }
+        .nav-icon { font-size: 1.1rem; }
+        .list-group-item a { color: #fff; text-decoration: none; }
+        .list-group-item a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-dark bg-dark fixed-top px-4">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="/user/home">🎬 MovieApp</a>
+
+        <form th:action="@{/user/search}" method="get" class="d-flex mx-auto">
+            <input type="text" name="query" class="form-control form-control-sm me-2" placeholder="Search movies..." th:value="${param.query}">
+            <button type="submit" class="btn btn-outline-light btn-sm"><i class="fas fa-search"></i></button>
+        </form>
+
+        <div class="d-flex align-items-center gap-3">
+            <a href="/user/profile" class="text-white nav-icon" title="My Account"><i class="fas fa-user"></i></a>
+            <a href="/logout" class="text-white nav-icon" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
+        </div>
+    </div>
+</nav>
+
 <div class="container mt-4">
-
-    <!-- Search Filters -->
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <form th:action="@{/user/search}" method="get" class="d-flex">
-                <input class="form-control me-2" type="search" placeholder="Search by name" name="q" th:value="${keyword}">
-                <button class="btn btn-outline-light" type="submit">Search</button>
-            </form>
+    <div class="row">
+        <!-- Categories -->
+        <div class="col-md-3 mb-4">
+            <h5>Categories</h5>
+            <ul class="list-group">
+                <li class="list-group-item bg-dark" th:each="cat : ${categories}">
+                    <a th:href="@{/user/search(categoryId=${cat.id})}" th:text="${cat.name}"></a>
+                </li>
+            </ul>
         </div>
-        <div class="col-md-6">
-            <form th:action="@{/user/search}" method="get">
-                <select class="form-select" name="categoryId" onchange="this.form.submit()">
-                    <option value="">All Categories</option>
-                    <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}"
-                            th:selected="${cat.id == selectedCategoryId}"></option>
-                </select>
-            </form>
-        </div>
-    </div>
 
-    <!-- Top-Rated Movies -->
-    <h4>Top Rated</h4>
-    <div class="row flex-nowrap overflow-auto mb-4">
-        <div class="col-6 col-md-4 col-lg-3 mb-3" th:each="m : ${topRated}">
-            <div class="card h-100 shadow-sm">
-                <img th:src="${m.imageUrl != null ? m.imageUrl : '/images/default-movie.jpg'}" class="card-img-top">
-                <div class="card-body">
-                    <h6 class="card-title" th:text="${m.title}"></h6>
-                    <div>⭐ <span th:text="${m.rating}"></span></div>
+        <!-- Movies -->
+        <div class="col-md-9">
+            <div class="row">
+                <div class="col-6 col-md-4 col-lg-3 mb-4" th:each="m : ${movies}">
+                    <a th:href="@{/user/movie/{id}(id=${m.id})}" class="text-decoration-none">
+                        <div class="card h-100 shadow-sm">
+                            <img th:src="${m.imageUrl != null ? m.imageUrl : '/images/default-movie.jpg'}"
+                                 class="card-img-top" alt="Movie poster" onerror="this.src='/images/default-movie.jpg'">
+                            <div class="card-body p-3 d-flex flex-column">
+                                <h6 class="card-title mb-2" th:text="${m.title}"></h6>
+                                <p class="card-text flex-grow-1" th:text="${#strings.abbreviate(m.description, 100)}"></p>
+                                <div class="mt-auto">
+                                    <span class="category-label" th:text="${m.category.name}"></span>
+                                    <div class="rating mt-2">⭐ <span th:text="${m.rating}"></span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
-
-    <!-- Latest Movies -->
-    <h4>Latest</h4>
-    <div class="row flex-nowrap overflow-auto mb-4">
-        <div class="col-6 col-md-4 col-lg-3 mb-3" th:each="m : ${latest}">
-            <div class="card h-100 shadow-sm">
-                <img th:src="${m.imageUrl != null ? m.imageUrl : '/images/default-movie.jpg'}" class="card-img-top">
-                <div class="card-body">
-                    <h6 class="card-title" th:text="${m.title}"></h6>
-                    <p th:text="${m.releaseDate}"></p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Search Results -->
-    <h4 th:if="${keyword != null && keyword != ''}">Search results for "<span th:text="${keyword}"></span>"</h4>
-    <div class="row mt-3">
-        <div class="col-6 col-md-4 col-lg-3 mb-4" th:each="m : ${movies}">
-            <div class="card h-100 shadow-sm">
-                <img th:src="${m.imageUrl != null ? m.imageUrl : '/images/default-movie.jpg'}" class="card-img-top">
-                <div class="card-body">
-                    <h6 class="card-title" th:text="${m.title}"></h6>
-                    <p class="card-text" th:text="${#strings.abbreviate(m.description, 80)}"></p>
-                    <span class="category-label" th:text="${m.category.name}"></span>
-                    <div class="mt-1">⭐ <span th:text="${m.rating}"></span></div>
-                </div>
-            </div>
-        </div>
-    </div>
-
 </div>
+
+</body>
+</html>

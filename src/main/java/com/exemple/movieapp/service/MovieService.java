@@ -1,67 +1,116 @@
 package com.exemple.movieapp.service;
 
+import com.exemple.movieapp.entities.Comment;
+import com.exemple.movieapp.entities.Favorite;
 import com.exemple.movieapp.entities.Movie;
+import com.exemple.movieapp.entities.User;
+import com.exemple.movieapp.repository.CommentRepository;
+import com.exemple.movieapp.repository.FavoriteRepository;
 import com.exemple.movieapp.repository.MovieRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.Comparator;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class MovieService {
 
     private final MovieRepository movieRepository;
+    private final CommentRepository commentRepository;
+    private final FavoriteRepository favoriteRepository;
 
-    public MovieService(MovieRepository movieRepository) {
+    public MovieService(MovieRepository movieRepository,
+                        CommentRepository commentRepository,
+                        FavoriteRepository favoriteRepository) {
         this.movieRepository = movieRepository;
+        this.commentRepository = commentRepository;
+        this.favoriteRepository = favoriteRepository;
     }
 
-    // Get all movies
+    // =================== Movie Methods ===================
     public List<Movie> getAllMovies() {
         return movieRepository.findAll();
     }
 
-    // Get movie by id
     public Movie getMovieById(Long id) {
         return movieRepository.findById(id).orElse(null);
     }
 
-    // Save or update movie
     public void saveMovie(Movie movie) {
         movieRepository.save(movie);
     }
 
-    // Delete movie by id
     public void deleteMovie(Long id) {
         movieRepository.deleteById(id);
     }
 
-    // Search movies by title (case-insensitive)
     public List<Movie> searchMovies(String keyword) {
         return movieRepository.findByTitleContainingIgnoreCase(keyword);
     }
 
-    // Filter movies by category id
     public List<Movie> filterByCategory(Long categoryId) {
         return movieRepository.findByCategoryId(categoryId);
     }
 
-    // Get top-rated movies (by rating, descending)
     public List<Movie> getTopRatedMovies(int limit) {
-        return getAllMovies().stream()
-
-                .sorted(Comparator.comparing(Movie::getRating).reversed())
-                .limit(limit)
-                .collect(Collectors.toList());
+        return movieRepository.findTop5ByOrderByRatingDesc();
     }
 
-    // Get latest movies (by releaseDate, descending)
-    public List<Movie> getLatestMovies(int limit) {
-        return getAllMovies().stream()
-                .filter(m -> m.getReleaseDate() != null)
-                .sorted(Comparator.comparing(Movie::getReleaseDate).reversed())
-                .limit(limit)
-                .collect(Collectors.toList());
+    public List<Movie> getLatestMovies() {
+        LocalDate startOfYear = LocalDate.of(LocalDate.now().getYear(), 1, 1);
+        return movieRepository.findByReleaseDateAfterOrderByReleaseDateDesc(startOfYear);
+    }
+
+
+    // =================== Comment Methods ===================
+    public List<Comment> getCommentsByMovie(Long movieId) {
+        return commentRepository.findByMovieIdOrderByCreatedAtDesc(movieId);
+    }
+
+    public void addComment(User user, Movie movie, String content, double userRating) {
+        Comment comment = new Comment();
+        comment.setUser(user);
+        comment.setMovie(movie);
+        comment.setContent(content);
+        comment.setRating(userRating);  // save user rating
+        comment.setCreatedAt(LocalDateTime.now());
+        commentRepository.save(comment);
+
+        // Update movie average rating
+        List<Comment> comments = movie.getComments();
+        comments.add(comment);  // include the new comment
+        double average = comments.stream()
+                .mapToDouble(Comment::getRating)
+                .average()
+                .orElse(0.0);
+        movie.setRating(average);
+        movieRepository.save(movie);
+    }
+
+
+    // =================== Favorite Methods ===================
+    public void addFavorite(User user, Movie movie) {
+        if (favoriteRepository.findByUserAndMovie(user, movie).isEmpty()) {
+            Favorite fav = new Favorite();
+            fav.setUser(user);
+            fav.setMovie(movie);
+            favoriteRepository.save(fav);
+        }
+    }
+
+    public void removeFavorite(User user, Movie movie) {
+        favoriteRepository.findByUserAndMovie(user, movie)
+                .ifPresent(favoriteRepository::delete);
+    }
+
+    public boolean isFavorite(User user, Movie movie) {
+        return favoriteRepository.findByUserAndMovie(user, movie).isPresent();
+    }
+
+    public List<Movie> getFavoritesByUser(User user) {
+        return favoriteRepository.findByUser(user).stream()
+                .map(Favorite::getMovie)
+                .toList();
     }
 }

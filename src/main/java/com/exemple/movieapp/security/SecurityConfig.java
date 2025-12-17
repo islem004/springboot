@@ -1,4 +1,4 @@
-package com.exemple.movieapp.security;
+package com.exemple.movieapp.config;
 
 import com.exemple.movieapp.service.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;

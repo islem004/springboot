@@ -11,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 @Controller
 @RequestMapping("/admin/movies")
@@ -25,14 +26,20 @@ public class AdminMovieController {
         this.categoryService = categoryService;
     }
 
-    // -------------------- List all movies --------------------
+    // ================= LIST =================
     @GetMapping
     public String listMovies(Model model) {
-        model.addAttribute("movies", movieService.getAllMovies());
+        List<Movie> movies = movieService.getAllMovies();
+        System.out.println("MOVIES SIZE = " + movies.size());
+        for (Movie m : movies) {
+            System.out.println("Movie: " + m.getTitle() + ", Category: " + (m.getCategory() != null ? m.getCategory().getName() : "NULL"));
+        }
+        model.addAttribute("movies", movies);
         return "admin/movies";
     }
 
-    // -------------------- Show add form --------------------
+
+    // ================= ADD =================
     @GetMapping("/add")
     public String addForm(Model model) {
         model.addAttribute("movie", new Movie());
@@ -40,79 +47,62 @@ public class AdminMovieController {
         return "admin/add-movie";
     }
 
-    // -------------------- Save new movie --------------------
     @PostMapping("/save")
-    public String save(
-            @ModelAttribute Movie movie,
-            @RequestParam Long categoryId,
-            @RequestParam("imageFile") MultipartFile file,
-            @RequestParam("imageUrl") String imageUrl) throws IOException {
+    public String save(@ModelAttribute Movie movie,
+                       @RequestParam Long categoryId,
+                       @RequestParam("imageFile") MultipartFile file) throws IOException {
 
-        // Priority: uploaded file first, then URL if file is empty
-        if (!file.isEmpty()) {
-            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-            String uploadDir = "src/main/resources/static/images/movies/";
-            File uploadPath = new File(uploadDir);
-            if (!uploadPath.exists()) uploadPath.mkdirs();
-            file.transferTo(new File(uploadDir + fileName));
-            movie.setImageUrl("/images/movies/" + fileName);
-        } else if (imageUrl != null && !imageUrl.isEmpty()) {
-            movie.setImageUrl(imageUrl);
-        }
-
-        // Set category
-        Category category = categoryService.getCategoryById(categoryId);
-        movie.setCategory(category);
-
+        handleImage(movie, file);
+        movie.setCategory(categoryService.getCategoryById(categoryId));
         movieService.saveMovie(movie);
+
         return "redirect:/admin/movies";
     }
 
-    // -------------------- Show edit form --------------------
+    // ================= EDIT =================
     @GetMapping("/edit/{id}")
     public String editForm(@PathVariable Long id, Model model) {
-        Movie movie = movieService.getMovieById(id);
-        model.addAttribute("movie", movie);
+        model.addAttribute("movie", movieService.getMovieById(id));
         model.addAttribute("categories", categoryService.getAllCategories());
         return "admin/edit-movie";
     }
 
-    // -------------------- Update movie --------------------
     @PostMapping("/update/{id}")
-    public String updateMovie(
-            @PathVariable Long id,
-            @ModelAttribute Movie movie,
-            @RequestParam Long categoryId,
-            @RequestParam("imageFile") MultipartFile file,
-            @RequestParam("imageUrl") String imageUrl) throws IOException {
+    public String update(@PathVariable Long id,
+                         @ModelAttribute Movie movie,
+                         @RequestParam Long categoryId,
+                         @RequestParam("imageFile") MultipartFile file) throws IOException {
 
-        if (!file.isEmpty()) {
-            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
-            String uploadDir = "src/main/resources/static/images/movies/";
-            File uploadPath = new File(uploadDir);
-            if (!uploadPath.exists()) uploadPath.mkdirs();
-            file.transferTo(new File(uploadDir + fileName));
-            movie.setImageUrl("/images/movies/" + fileName);
-        } else if (imageUrl != null && !imageUrl.isEmpty()) {
-            movie.setImageUrl(imageUrl);
-        } else {
-            // Keep existing image if no new file or URL is provided
-            Movie existing = movieService.getMovieById(id);
+        Movie existing = movieService.getMovieById(id);
+
+        handleImage(movie, file);
+        if (movie.getImageUrl() == null) {
             movie.setImageUrl(existing.getImageUrl());
         }
 
-        Category category = categoryService.getCategoryById(categoryId);
-        movie.setCategory(category);
         movie.setId(id);
+        movie.setCategory(categoryService.getCategoryById(categoryId));
         movieService.saveMovie(movie);
 
         return "redirect:/admin/movies";
     }
 
-    // -------------------- Delete movie --------------------
+    // ================= DELETE =================
     @GetMapping("/delete/{id}")
     public String delete(@PathVariable Long id) {
         movieService.deleteMovie(id);
         return "redirect:/admin/movies";
+    }
+
+    // ================= IMAGE =================
+    private void handleImage(Movie movie, MultipartFile file) throws IOException {
+        if (!file.isEmpty()) {
+            String fileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+            File dir = new File("src/main/resources/static/images/movies/");
+            if (!dir.exists()) dir.mkdirs();
+
+            file.transferTo(new File(dir, fileName));
+            movie.setImageUrl("/images/movies/" + fileName);
+        }
     }
 }
