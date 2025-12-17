@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Data
@@ -18,8 +20,17 @@ public class Movie {
     private double rating;
     private LocalDate releaseDate;
     private String description;
+    private String director;
+    @Column(length = 1000)
+    private String cast;
     @Column(length = 500)
-    private String imageUrl; // can store file path or online URL
+    private String imageUrl;
+    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL)
+    private List<Comment> comments = new ArrayList<>();
+
+    @OneToMany(mappedBy = "movie", cascade = CascadeType.ALL)
+    private List<Favorite> favorites = new ArrayList<>();
+// can store file path or online URL
 
 
 
